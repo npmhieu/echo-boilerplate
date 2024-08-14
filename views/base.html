@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}My Website{% endblock %}</title>
+
+  {% block head_javascript %}
+  {% endblock %}
+  {% block stylesheet %}
+  {% endblock %}
+</head>
+<body>
+  <header>
+    {% include "partials/header.html" %}
+  </header>
+
+  <main>
+    {% block content %}
+    <!-- Child template content will be rendered here -->
+    {% endblock %}
+  </main>
+
+  <footer>
+    {% include "partials/footer.html" %}
+  </footer>
+
+  {% block javascript %}
+  {% endblock %}
+</body>
+</html>
