@@ -1,9 +1,11 @@
 package main
 
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"goapp/src/config"
 	"goapp/src/routes"
 	"goapp/src/utils"
 )
@@ -14,7 +16,12 @@ func main() {
 		panic("Error loading .env file")
 	}
 
+	// Initialize database connection
+	config.ConnectDatabase()
+
 	e := echo.New()
+	// Register the custom validator
+	e.Validator = &utils.CustomValidator{Validator: validator.New()}
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
