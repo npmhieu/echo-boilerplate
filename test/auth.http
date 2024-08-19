@@ -1,0 +1,19 @@
+### POST method - Register new user
+POST http://localhost:8080/api/app/register
+Content-Type: application/json
+
+{
+  "fullName": "App User 1",
+  "email": "app.user1@yopmail.com",
+  "password": "12345Trewq",
+  "phone": "0939300122"
+}
+
+### POST method - Login user
+POST http://localhost:8080/api/app/login
+Content-Type: application/json
+
+{
+"email": "app.user1@yopmail.com",
+"password": "12345Trewq"
+}

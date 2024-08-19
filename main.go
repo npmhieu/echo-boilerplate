@@ -36,6 +36,7 @@ func main() {
 
 	routes.RegisterRoutes(e)
 	routes.RegisterAPIRoutes(e)
+	routes.RegisterAuthAPIRoutes(e)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
