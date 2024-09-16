@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"goapp/src/config"
 	"goapp/src/models"
