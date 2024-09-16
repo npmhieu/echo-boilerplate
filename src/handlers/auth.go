@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"goapp/src/config"
 	"goapp/src/models"
 	"goapp/src/utils"
@@ -167,7 +168,7 @@ func RegisterSession(c echo.Context) error {
 		FullName:   req.FullName,
 		Phone:      req.Phone,
 		RoleMask:   roleMask,
-		IsVerified: false,
+		IsVerified: false, // Người dùng chưa được xác thực
 		Created:    time.Now(),
 		Updated:    time.Now(),
 	}
@@ -177,6 +178,7 @@ func RegisterSession(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user"})
 	}
 
+	// Tạo session ID
 	sessionID := uuid.NewString()
 	sessionData := SessionData{
 		UserID:   user.ID,
@@ -190,8 +192,10 @@ func RegisterSession(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to marshal session data"})
 	}
 
+	// Tạo thời gian hết hạn cho session
 	expiresOn := time.Now().Add(72 * time.Hour)
 
+	// Lưu session vào cơ sở dữ liệu
 	session := models.SessionUser{
 		ID:          sessionID,
 		SessionData: sessionJSON,
@@ -202,7 +206,7 @@ func RegisterSession(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to save session"})
 	}
 
-	// Set session ID for cookie
+	// Set session ID vào cookie
 	cookie := &http.Cookie{
 		Name:     "session_id",
 		Value:    sessionID,
@@ -211,11 +215,13 @@ func RegisterSession(c echo.Context) error {
 	}
 	c.SetCookie(cookie)
 
-	utils.SendEmailAsync(user.Email, "Account Activation", "Thank you for registering.")
+	verificationLink := "http://localhost:8080/api/app/verify?session_id=" + sessionID
+	emailBody := "Thank you for registering an account. Click on the following link to activate your account: " + verificationLink
 
+	utils.SendEmailAsync(user.Email, "Xác thực tài khoản", emailBody)
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message":    "Registration successful",
+		"message":    "Registration successful. Please check your email to verify your account.",
 		"session_id": cookie.Value,
 		"expires":    cookie.Expires,
 	})
@@ -287,4 +293,33 @@ func LoginSession(c echo.Context) error {
 		"session_id": cookie.Value,
 		"expires":    cookie.Expires,
 	})
+}
+
+
+func VerifyEmail(c echo.Context) error {
+	sessionID := c.QueryParam("session_id")
+	fmt.Println(sessionID)
+	if sessionID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing session ID"})
+	}
+
+	session := models.SessionUser{}
+	if result := config.GetDatabase().Where("id = ?", sessionID).First(&session); result.Error != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid session ID"})
+	}
+
+	var sessionData SessionData
+	if err := json.Unmarshal(session.SessionData, &sessionData); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to parse session data"})
+	}
+
+	user := models.User{}
+	config.GetDatabase().Where("id = ?", sessionData.UserID).First(&user)
+	user.IsVerified = true
+
+	if err := config.GetDatabase().Save(&user).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update user"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Account verified successfully"})
 }
