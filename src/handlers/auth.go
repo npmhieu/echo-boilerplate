@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"encoding/json"
 	"goapp/src/config"
 	"goapp/src/models"
 	"goapp/src/utils"
 	"net/http"
 	"os"
 	"time"
-	"encoding/json"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
@@ -210,7 +211,11 @@ func RegisterSession(c echo.Context) error {
 	}
 	c.SetCookie(cookie)
 
-	
+	err = utils.SendEmail(user.Email, "Active", "Hello")
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err})
+	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":    "Registration successful",
 		"session_id": cookie.Value,

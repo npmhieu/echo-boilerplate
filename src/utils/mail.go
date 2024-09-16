@@ -1,19 +1,27 @@
 package utils
 
 import (
+	"os"
+	"fmt"
 	"gopkg.in/gomail.v2"
 )
 
-func sendEmail(fromEmail, toEmail, subject, body string) error {
-	// Thiết lập thông tin email
-	m := gomail.NewMessage()
-	m.SetHeader("From", fromEmail)  // Email gửi
-	m.SetHeader("To", toEmail)      // Email nhận
-	m.SetHeader("Subject", subject) // Tiêu đề email
-	m.SetBody("text/plain", body)   // Nội dung email (text/plain)
 
-	// Thiết lập server SMTP (điều chỉnh email và mật khẩu)
-	d := gomail.NewDialer("smtp.gmail.com", 587, "youremail@example.com", "yourpassword")
+
+func SendEmail(toEmail, subject, body string) error {
+	var mail = os.Getenv("EMAIL")
+	var passMail = os.Getenv("PASS_APP_MAIL")
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", mail)  
+	m.SetHeader("To", toEmail)      
+	m.SetHeader("Subject", subject) 
+	m.SetBody("text/plain", body)   
+
+	fmt.Println(mail)
+	fmt.Println(passMail)
+
+	d := gomail.NewDialer("smtp.gmail.com", 587, mail, passMail)
 
 	// Gửi email
 	if err := d.DialAndSend(m); err != nil {
