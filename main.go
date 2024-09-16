@@ -15,7 +15,7 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		panic("Error loading .env file")
 	}
-
+	utils.InitSmtpDialer()
 	// Initialize database connection
 	config.ConnectDatabase()
 

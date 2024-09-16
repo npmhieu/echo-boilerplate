@@ -211,11 +211,9 @@ func RegisterSession(c echo.Context) error {
 	}
 	c.SetCookie(cookie)
 
-	err = utils.SendEmail(user.Email, "Active", "Hello")
+	utils.SendEmailAsync(user.Email, "Account Activation", "Thank you for registering.")
 
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err})
-	}
+
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":    "Registration successful",
 		"session_id": cookie.Value,
