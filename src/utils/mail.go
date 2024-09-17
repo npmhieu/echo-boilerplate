@@ -23,7 +23,7 @@ func SendEmail(toEmail, subject, body string) error {
         return fmt.Errorf("SendGrid API key is not initialized")
     }
 
-    from := mail.NewEmail("Dai Hai", os.Getenv("EMAIL"))
+    from := mail.NewEmail(os.Getenv("FROM_NAME_MAIL"), os.Getenv("EMAIL"))
     to := mail.NewEmail("Recipient", toEmail)
     message := mail.NewSingleEmail(from, subject, to, body, body)
 
