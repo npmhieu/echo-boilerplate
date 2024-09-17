@@ -3,45 +3,47 @@ package utils
 import (
     "fmt"
     "os"
-    "gopkg.in/gomail.v2"
+
+    "github.com/sendgrid/sendgrid-go"
+    "github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-var smtpDialer *gomail.Dialer
+var sendgridAPIKey string
 
-func InitSmtpDialer() {
-    mail := os.Getenv("EMAIL")
-    passMail := os.Getenv("PASS_APP_MAIL")
-
-    if mail == "" || passMail == "" {
-        fmt.Println("Missing email or password for SMTP")
-        return
+// InitSendGrid initializes the SendGrid API key
+func InitSendMail() {
+    sendgridAPIKey = os.Getenv("SENDGRID_KEY")
+    if sendgridAPIKey == "" {
+        fmt.Println("Missing SendGrid API key")
     }
-
-    smtpDialer = gomail.NewDialer("smtp.gmail.com", 587, mail, passMail)
 }
 
-
 func SendEmail(toEmail, subject, body string) error {
-    if smtpDialer == nil {
-        return fmt.Errorf("SMTP dialer is not initialized")
+    if sendgridAPIKey == "" {
+        return fmt.Errorf("SendGrid API key is not initialized")
     }
 
-    m := gomail.NewMessage()
-    m.SetHeader("From", os.Getenv("EMAIL"))
-    m.SetHeader("To", toEmail)
-    m.SetHeader("Subject", subject)
-    m.SetBody("text/plain", body)
+    from := mail.NewEmail("Dai Hai", os.Getenv("EMAIL"))
+    to := mail.NewEmail("Recipient", toEmail)
+    message := mail.NewSingleEmail(from, subject, to, body, body)
 
-    if err := smtpDialer.DialAndSend(m); err != nil {
+    client := sendgrid.NewSendClient(sendgridAPIKey)
+    response, err := client.Send(message)
+    if err != nil {
         return err
     }
+
+    if response.StatusCode >= 400 {
+        return fmt.Errorf("Failed to send email: %v", response.Body)
+    }
+
     return nil
 }
 
+// SendEmailAsync sends an email asynchronously using SendGrid
 func SendEmailAsync(toEmail, subject, body string) {
     go func() {
-        if err := SendEmail(toEmail, subject, body)
-		err != nil {
+        if err := SendEmail(toEmail, subject, body); err != nil {
             fmt.Printf("Error sending email: %v\n", err)
         }
     }()
