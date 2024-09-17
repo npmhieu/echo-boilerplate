@@ -215,10 +215,11 @@ func RegisterSession(c echo.Context) error {
 	}
 	c.SetCookie(cookie)
 
-	verificationLink := "http://localhost:8080/api/app/verify?session_id=" + sessionID
+	linkActive := os.Getenv("LINK_ACTIVE_USER")
+	verificationLink := linkActive + sessionID
 	emailBody := "Thank you for registering an account. Click on the following link to activate your account: " + verificationLink
 
-	utils.SendEmailAsync(user.Email, "Xác thực tài khoản", emailBody)
+	utils.SendEmailAsync(user.Email, "Active account", emailBody)
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":    "Registration successful. Please check your email to verify your account.",
