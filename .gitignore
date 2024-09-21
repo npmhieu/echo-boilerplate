@@ -30,3 +30,4 @@ uploads/*
 !uploads/gitkeep
 
 .air.toml
+tmp/*
