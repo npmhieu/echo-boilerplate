@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 
 	"github.com/labstack/echo/v4"
@@ -22,7 +22,6 @@ type RegisterRequest struct {
 	FullName string `json:"fullName" validate:"required"`
 	Phone    string `json:"phone" validate:"omitempty"`
 }
-
 
 func Register(c echo.Context) error {
 	// Parse and validate the request body
@@ -134,7 +133,6 @@ func Login(c echo.Context) error {
 
 // ===========================================================
 // ********************* Session *********************
-
 
 type SessionData struct {
 	UserID   uint
@@ -295,7 +293,6 @@ func LoginSession(c echo.Context) error {
 		"expires":    cookie.Expires,
 	})
 }
-
 
 func VerifyEmail(c echo.Context) error {
 	sessionID := c.QueryParam("session_id")
