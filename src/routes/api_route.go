@@ -13,6 +13,9 @@ func RegisterAPIRoutes(e *echo.Echo) {
 	apiGroup.GET("/tasks", GetTasksHandler)
 	apiGroup.POST("/register", handlers.Register)
 	apiGroup.POST("/login", handlers.Login)
+	apiGroup.POST("/register_session", handlers.RegisterSession)
+	apiGroup.POST("/login_session", handlers.LoginSession)
+	apiGroup.GET("/verify", handlers.VerifyEmail)
 }
 
 // GetTasksHandler handles the /api/tasks route
