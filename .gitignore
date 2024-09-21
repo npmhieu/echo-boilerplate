@@ -28,3 +28,5 @@ public/build/*
 
 uploads/*
 !uploads/gitkeep
+
+.air.toml
