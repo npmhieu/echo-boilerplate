@@ -310,10 +310,11 @@ func VerifyEmail(c echo.Context) error {
 	}
 
 	var sessionData SessionData
+
 	if err := json.Unmarshal(session.SessionData, &sessionData); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to parse session data"})
 	}
-
+	
 	user := models.User{}
 	config.GetDatabase().Where("id = ?", sessionData.UserID).First(&user)
 	user.IsVerified = true
