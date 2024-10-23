@@ -23,7 +23,6 @@ type RegisterRequest struct {
 	Phone    string `json:"phone" validate:"omitempty"`
 }
 
-
 func Register(c echo.Context) error {
 	// Parse and validate the request body
 	req := new(RegisterRequest)
@@ -56,7 +55,7 @@ func Register(c echo.Context) error {
 	}
 
 	// Save the user to the database
-	if result := config.GetDatabase().Create(&user); result.Error != nil {
+	if result := config.Database().Create(&user); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user"})
 	}
 
@@ -135,7 +134,6 @@ func Login(c echo.Context) error {
 // ===========================================================
 // ********************* Session *********************
 
-
 type SessionData struct {
 	UserID   uint
 	Email    string
@@ -174,7 +172,7 @@ func RegisterSession(c echo.Context) error {
 	}
 
 	// Save the user to the database
-	if result := config.GetDatabase().Create(&user); result.Error != nil {
+	if result := config.Database().Create(&user); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user"})
 	}
 
@@ -199,10 +197,10 @@ func RegisterSession(c echo.Context) error {
 	session := models.SessionUser{
 		ID:          sessionID,
 		SessionData: sessionJSON,
-		ExpiresOn:   expiresOn, 
+		ExpiresOn:   expiresOn,
 	}
-	
-	if result := config.GetDatabase().Create(&session); result.Error != nil {
+
+	if result := config.Database().Create(&session); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to save session"})
 	}
 
@@ -210,7 +208,7 @@ func RegisterSession(c echo.Context) error {
 	cookie := &http.Cookie{
 		Name:     "session_id",
 		Value:    sessionID,
-		Expires:  session.ExpiresOn, 
+		Expires:  session.ExpiresOn,
 		HttpOnly: true,
 	}
 	c.SetCookie(cookie)
@@ -277,14 +275,14 @@ func LoginSession(c echo.Context) error {
 		Updated:     time.Now(),
 	}
 
-	if result := config.GetDatabase().Create(&session); result.Error != nil {
+	if result := config.Database().Create(&session); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to save session"})
 	}
 
 	cookie := &http.Cookie{
 		Name:     "session_id",
 		Value:    sessionID,
-		Expires:  session.ExpiresOn, 
+		Expires:  session.ExpiresOn,
 		HttpOnly: true,
 	}
 	c.SetCookie(cookie)
@@ -296,7 +294,6 @@ func LoginSession(c echo.Context) error {
 	})
 }
 
-
 func VerifyEmail(c echo.Context) error {
 	sessionID := c.QueryParam("session_id")
 	fmt.Println(sessionID)
@@ -305,7 +302,7 @@ func VerifyEmail(c echo.Context) error {
 	}
 
 	session := models.SessionUser{}
-	if result := config.GetDatabase().Where("id = ?", sessionID).First(&session); result.Error != nil {
+	if result := config.Database().Where("id = ?", sessionID).First(&session); result.Error != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid session ID"})
 	}
 
@@ -314,12 +311,12 @@ func VerifyEmail(c echo.Context) error {
 	if err := json.Unmarshal(session.SessionData, &sessionData); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to parse session data"})
 	}
-	
+
 	user := models.User{}
-	config.GetDatabase().Where("id = ?", sessionData.UserID).First(&user)
+	config.Database().Where("id = ?", sessionData.UserID).First(&user)
 	user.IsVerified = true
 
-	if err := config.GetDatabase().Save(&user).Error; err != nil {
+	if err := config.Database().Save(&user).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update user"})
 	}
 
