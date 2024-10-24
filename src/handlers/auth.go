@@ -55,7 +55,7 @@ func Register(c echo.Context) error {
 	}
 
 	// Save the user to the database
-	if result := config.GetDatabase().Create(&user); result.Error != nil {
+	if result := config.Database().Create(&user); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user"})
 	}
 
@@ -172,7 +172,7 @@ func RegisterSession(c echo.Context) error {
 	}
 
 	// Save the user to the database
-	if result := config.GetDatabase().Create(&user); result.Error != nil {
+	if result := config.Database().Create(&user); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user"})
 	}
 
@@ -200,7 +200,7 @@ func RegisterSession(c echo.Context) error {
 		ExpiresOn:   expiresOn,
 	}
 
-	if result := config.GetDatabase().Create(&session); result.Error != nil {
+	if result := config.Database().Create(&session); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to save session"})
 	}
 
@@ -275,7 +275,7 @@ func LoginSession(c echo.Context) error {
 		Updated:     time.Now(),
 	}
 
-	if result := config.GetDatabase().Create(&session); result.Error != nil {
+	if result := config.Database().Create(&session); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to save session"})
 	}
 
@@ -302,20 +302,21 @@ func VerifyEmail(c echo.Context) error {
 	}
 
 	session := models.SessionUser{}
-	if result := config.GetDatabase().Where("id = ?", sessionID).First(&session); result.Error != nil {
+	if result := config.Database().Where("id = ?", sessionID).First(&session); result.Error != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid session ID"})
 	}
 
 	var sessionData SessionData
+
 	if err := json.Unmarshal(session.SessionData, &sessionData); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to parse session data"})
 	}
 
 	user := models.User{}
-	config.GetDatabase().Where("id = ?", sessionData.UserID).First(&user)
+	config.Database().Where("id = ?", sessionData.UserID).First(&user)
 	user.IsVerified = true
 
-	if err := config.GetDatabase().Save(&user).Error; err != nil {
+	if err := config.Database().Save(&user).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update user"})
 	}
 
