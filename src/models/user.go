@@ -8,7 +8,7 @@ type User struct {
 	ID         uint      `gorm:"primaryKey;column:id"`
 	Created    time.Time `gorm:"column:created;not null;default:CURRENT_TIMESTAMP"`
 	Updated    time.Time `gorm:"column:updated"`
-	Email      string    `gorm:"column:email;not null"`
+	Email      string    `gorm:"column:email;not null;unique"`
 	Password   string    `gorm:"column:password;not null"`
 	FullName   string    `gorm:"column:fullName;not null"`
 	Phone      string    `gorm:"column:phone"`

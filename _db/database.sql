@@ -6,7 +6,7 @@ CREATE TABLE tbl_user
     id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     created    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated    TIMESTAMP    DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-    email      VARCHAR(255) NOT NULL,
+    email      VARCHAR(255) NOT NULL UNIQUE,
     password   VARCHAR(255) NOT NULL,
     fullName   VARCHAR(255) NOT NULL,
     phone      VARCHAR(20)  DEFAULT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE tbl_user
 
 CREATE TABLE session_user (
   id varchar(255) NOT NULL,
-  session_dat blob,
+  session_data blob,
   expires_on timestamp NOT NULL,
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,

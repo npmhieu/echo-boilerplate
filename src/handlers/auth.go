@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"goapp/src/config"
 	"goapp/src/models"
+	"goapp/src/service"
 	"goapp/src/utils"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -54,8 +56,10 @@ func Register(c echo.Context) error {
 		Updated:    time.Now(),
 	}
 
-	// Save the user to the database
-	if result := config.Database().Create(&user); result.Error != nil {
+	if err := service.CreateAUserService(user); err != nil {
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email already exists"})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user"})
 	}
 
@@ -98,10 +102,10 @@ func Login(c echo.Context) error {
 	}
 
 	// Find the user by email
-	storedUser := models.User{}
-	result := config.DB.Where("email = ?", req.Email).First(&storedUser)
-	if result.Error != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid email or password"})
+	var storedUser *models.User
+	storedUser, err := service.GetUserByMailService(req.Email)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch user by email"})
 	}
 
 	// Check the password
@@ -171,17 +175,25 @@ func RegisterSession(c echo.Context) error {
 		Updated:    time.Now(),
 	}
 
-	// Save the user to the database
-	if result := config.Database().Create(&user); result.Error != nil {
+	if err := service.CreateAUserService(user); err != nil {
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email already exists"})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create user"})
+	}
+
+	var userToSession *models.User
+	userToSession, err = service.GetUserByMailService(req.Email)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch user by email"})
 	}
 
 	// Tạo session ID
 	sessionID := uuid.NewString()
 	sessionData := SessionData{
-		UserID:   user.ID,
-		Email:    user.Email,
-		RoleMask: user.RoleMask,
+		UserID:   userToSession.ID,
+		Email:    userToSession.Email,
+		RoleMask: userToSession.RoleMask,
 	}
 
 	// Convert session data to JSON
@@ -200,8 +212,8 @@ func RegisterSession(c echo.Context) error {
 		ExpiresOn:   expiresOn,
 	}
 
-	if result := config.Database().Create(&session); result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to save session"})
+	if err := service.CreateASessionService(session); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create session"})
 	}
 
 	// Set session ID vào cookie
@@ -238,10 +250,10 @@ func LoginSession(c echo.Context) error {
 	}
 
 	// Find the user by email
-	storedUser := models.User{}
-	result := config.DB.Where("email = ?", req.Email).First(&storedUser)
-	if result.Error != nil {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid email or password"})
+	var storedUser *models.User
+	storedUser, err := service.GetUserByMailService(req.Email)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch user by email"})
 	}
 
 	// Check the password
@@ -272,7 +284,6 @@ func LoginSession(c echo.Context) error {
 		SessionData: sessionJSON,
 		ExpiresOn:   expiresOn,
 		Created:     time.Now(),
-		Updated:     time.Now(),
 	}
 
 	if result := config.Database().Create(&session); result.Error != nil {
@@ -301,9 +312,10 @@ func VerifyEmail(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing session ID"})
 	}
 
-	session := models.SessionUser{}
-	if result := config.Database().Where("id = ?", sessionID).First(&session); result.Error != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid session ID"})
+	var session *models.SessionUser
+	session, err := service.GetSessionByIdService(sessionID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch session"})
 	}
 
 	var sessionData SessionData
@@ -312,11 +324,14 @@ func VerifyEmail(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to parse session data"})
 	}
 
-	user := models.User{}
-	config.Database().Where("id = ?", sessionData.UserID).First(&user)
+	var user *models.User
+	user, err = service.GetUserByMailService(sessionData.Email)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid email or password"})
+	}
 	user.IsVerified = true
 
-	if err := config.Database().Save(&user).Error; err != nil {
+	if err := config.DB.Model(&user).Update("isVerified", user.IsVerified).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update user"})
 	}
 
