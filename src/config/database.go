@@ -44,7 +44,7 @@ func ConnectDatabase() {
 }
 
 // GetDatabase returns the global database instance
-func Database() *gorm.DB {
+func GetDatabase() *gorm.DB {
 	if DB == nil {
 		log.Fatal("Database connection is not established")
 	}

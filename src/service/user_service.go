@@ -6,7 +6,7 @@ import (
 )
 
 func CreateAUserService(user models.User) error {
-	if err := config.Database().Create(&user).Error; err != nil {
+	if err := config.DB.Create(&user).Error; err != nil {
 		return err
 	}
 
@@ -16,7 +16,7 @@ func CreateAUserService(user models.User) error {
 func GetUserByMailService(email string) (*models.User, error) {
 	var userResult *models.User
 
-	if err := config.Database().Where("email = ?", email).First(&userResult).Error; err != nil {
+	if err := config.DB.Where("email = ?", email).First(&userResult).Error; err != nil {
 		return nil, err
 	}
 

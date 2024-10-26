@@ -6,7 +6,7 @@ import (
 )
 
 func CreateASessionService(session models.SessionUser) error {
-	if err := config.Database().Create(&session).Error; err != nil {
+	if err := config.DB.Create(&session).Error; err != nil {
 		return err
 	}
 
@@ -16,7 +16,7 @@ func CreateASessionService(session models.SessionUser) error {
 func GetSessionByIdService(idSession string) (*models.SessionUser, error) {
 	var sessionResult *models.SessionUser
 
-	if err := config.Database().Where("id = ?", idSession).First(&sessionResult).Error; err != nil {
+	if err := config.DB.Where("id = ?", idSession).First(&sessionResult).Error; err != nil {
 		return nil, err
 	}
 

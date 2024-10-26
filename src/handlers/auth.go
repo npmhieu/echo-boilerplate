@@ -286,7 +286,7 @@ func LoginSession(c echo.Context) error {
 		Created:     time.Now(),
 	}
 
-	if result := config.Database().Create(&session); result.Error != nil {
+	if result := config.DB.Create(&session); result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to save session"})
 	}
 

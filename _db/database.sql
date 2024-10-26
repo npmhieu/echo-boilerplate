@@ -14,7 +14,7 @@ CREATE TABLE tbl_user
     isVerified SMALLINT     DEFAULT NULL
 );
 
-CREATE TABLE session_user (
+CREATE TABLE tbl_session_user (
   id varchar(255) NOT NULL,
   session_data blob,
   expires_on timestamp NOT NULL,
